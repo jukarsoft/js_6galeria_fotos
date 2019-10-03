@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+	<title>galeria de fotos</title>
+
+	<meta charset="utf-8">
+	<script type="text/javascript" src='https://code.jquery.com/jquery-3.3.1.min.js'></script>
+	<style type="text/css">
+
+		#contenedor {
+			width: 85%;
+			margin: auto;
+			padding: 10px;
+			border-radius: 5px;
+			border: 1px solid grey;
+		
+		}
+		#fotos img {
+			width: 150px; height: 110px;
+		}
+
+		#galeria img {
+			width: 280px; height: 200px;
+			
+		}
+		/* para la caja div */
+		.cajaImgGaleria {
+			display: inline-block;
+			position:relative;
+
+		}
+		/* para la caja que contiene la imagen foto */
+		.ImgGaleria {
+			border-radius: 3px;
+			box-shadow: 5px 4px 6px 0px #460303;
+			cursor: pointer;
+
+		}
+		/*para posicionar la imagen cruz en el Div */
+		#galeria img.borrar {
+			width: 20px;
+			height: 20px;
+			position: absolute;
+			top: 5px;
+			right: 5px;
+			cursor: pointer;
+		}
+				
+		#lightBox {
+			width: 100%;
+			height: 100vh;
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			border: 0px solid red;
+			background-color: rgba(0,0,0,0.6);
+			align-items: center;
+			justify-content: center;
+			display: none;
+		}
+
+		#fotoLightBox  {
+			width: 50%;
+		}
+
+		img#anterior{
+			width: 60px;
+			height: 40px;
+			cursor: pointer;
+		}
+
+		img#siguiente {
+			width: 60px;
+			height: 40px;
+			transform: rotate(180deg);
+		}
+
+	</style>
+	<script type="text/javascript" src='https://code.jquery.com/jquery-3.3.1.min.js'></script>
+	<script type="text/javascript">
+			//inicializar variables y arrays globales   (¿puede ser const?)
+			var arrayFotos = ['casa1.jpg','casa2.jpg','casa3.jpg','casa4.jpg','casa5.jpg','casa6.jpg','casa7.jpg','casa8.jpg',];
+			//array  fotos para la galeria
+			var arrayGaleria = [];
+			var imagenActual = 0;
+
+			window.onload = function () {
+				//1.Mostrar las fotos en la caja fotos
+				mostrarFotos();
+				//borrar el storage 
+				//localStorage.removeItem('galeria')
+				//mostrar contenido del storage en la galeria
+				leerStorage();
+				document.getElementById('anterior').addEventListener('click', imagenAnterior);
+				document.getElementById('siguiente').addEventListener('click', imagenSiguiente);
+				document.getElementById('lightBox').addEventListener('click',cerrarLightBox);
+				
+			}
+
+			//recoge el array para cargar las fotos en la caja #fotos
+			function mostrarFotos() {
+				//recorre el array de fotos para crear los nodos
+				for (i=0;i<arrayFotos.length;i++) {
+					//crea el objeto img
+					var objeto=document.createElement('img');
+					//añadir el atributo src
+					objeto.setAttribute(`src`,`img/${arrayFotos[i]}`);
+					//crear el nodo en el documento
+					document.querySelector('#fotos').append(objeto);
+					//activar listener por cada elemento (foto), creado  'DOUBLECLICK'
+					objeto.addEventListener('dblclick', afegirGaleria);
+				}
+			}
+
+			//recupera el contenido del storage (localStorage 'galeria')
+			function leerStorage() {
+				//alert ('leerStorage')
+				//comprobar si existe el storage 
+				if (localStorage.getItem('galeria')!=undefined) {
+					//leer la galeria desde el storage 
+					var arrayTexto = localStorage.getItem('galeria');
+					arrayGaleria = arrayTexto.split(';');
+				}	
+				//console.log(arrayGaleria);
+				//recorrer el array galeria para mostrar las fotos en la pantalla
+						//for (i=0;i<arrayGaleria.length;i++) {
+						//	crearNodoImagen(arrayGaleria[i]);	
+						//}
+				//nueva funcion ecma6, recorre el array e invoca a la función que crea el nodo
+						//arrayGaleria.map(function(el){crearNodoImagen(el)});
+				//ecma6 function arrow
+				arrayGaleria.map(el=>crearNodoImagen(el));
+			}
+			
+			//recoge la foto seleccionada de la colección fotos, recupera nombre de la foto e invoca a las funciones
+			//para mostrar en la galeria de fotos
+			function afegirGaleria() {
+				//console.log(this);
+				//alert('afegirGaleria')
+				//añadir el nombre de la foto al array Galeria - la foto es la seleccionada de la lista de fotos
+				var foto = this.getAttribute('src'); //recupera atributo
+				//alert (foto)
+				//img/casa?.jpg (se puede hacer con un split)
+				var slash = foto.lastIndexOf('/');
+				foto = foto.substring(slash+1);//coge desde la posición al final el texto
+				//alert (foto)
+				//comprobar que la foto no existe en la galeria
+				if (arrayGaleria.includes(foto)) {
+					alert('la foto ya existe en la galeria');
+					return; //no ejecuta el resto del código
+				}
+				//añadir la foto al array a la galeria
+				arrayGaleria.push(foto);
+				//console.log(arrayGaleria)
+				//Mostrar la foto en la caja #galeria
+				//crear un objeto imagen en #Galeria
+				crearNodoImagen(foto);
+				//guardar el array Galeria en el LocalStorage
+				guardarLocalStorage()
+				//activar listener de la foto de la galeria
+				//objeto.addEventListener('click', escogeFotoGaleria);
+			}
+
+			//crea los nodos para contener las imagenes (foto + cruz) y su contenedor (div)
+			function crearNodoImagen (imagen) {
+				//crear nodo div                           ----DIV---
+				var div=document.createElement('div'); 
+				//asignarle una clase
+				div.classList.add('cajaImgGaleria');
+
+				//crear un objeto imagen en #Galeria    ---IMG ---
+				var objeto=document.createElement('img');
+				//añade una clase 
+				objeto.classList.add('ImgGaleria');
+				//añadir el atributo src
+				objeto.setAttribute('src',`img/${imagen}`);
+				//añadir listener a la imagen para selección  - abrir lightbox
+				objeto.addEventListener('click',abrirLightBox);
+
+
+				//crear objeto img de la cruz para borrar   ---CRUZ---
+				var borrar=document.createElement('img');
+				borrar.setAttribute('src','img/borrar.png');
+				borrar.classList.add('borrar');
+				borrar.addEventListener('click',borrarFoto)
+				//componer el nodo a enviar al documento
+				div.append(objeto);
+				div.append(borrar);
+				//crear el nodo en el documento
+				document.querySelector('#galeria').append(div);
+
+			}
+
+			//borra desde el nodo padre (#galeria, el nodo hijo) +
+			//borra foto del arrayGaleria + borra foto del storage (galeria)
+			function borrarFoto() {
+				//alert('borrarFoto')
+				//borrar  la foto del array de la galeria -->arrayGaleria
+				var cajaBorrar=this.parentNode;
+				//borrar la caja desde el parent
+				var padre=cajaBorrar.parentNode;
+				//obtener el nombre de la foto
+				var nombreFoto = cajaBorrar.querySelector('.ImgGaleria').getAttribute('src')
+				//alert ('nombre foto' + nombreFoto);
+				//borra desde el padre todo los objetos que contenga
+				//borrar nodos --> desde el node padre DIV
+				padre.removeChild(cajaBorrar);
+						
+				//buscar en el array ---- splice
+				//img/casa?.jpg (se puede hacer con un split)
+				var slash = nombreFoto.lastIndexOf('/');
+				nombreFoto = nombreFoto.substring(slash+1);//coge desde la posición al final
+				//alert (nombreFoto)
+				//comprobar que la foto no existe en la galeria
+				var cierto=arrayGaleria.includes(nombreFoto)
+				//alert ('cierto?' + cierto)
+				if (cierto != true) {
+					alert('foto no encontrada para borrar');
+					return; //no ejecuta el resto del código
+				}
+				var index = arrayGaleria.indexOf(nombreFoto);
+				arrayGaleria.splice(index,1);
+				//actualizar el storage --> galeria
+				guardarLocalStorage();
+			}
+
+			//guarda registro en storage local
+			function guardarLocalStorage() {
+				//alert('guardar')
+				//convertir el array a texto
+				var arrayTexto = arrayGaleria.join(';');
+				//alert (arrayTexto);
+				//guardar el array de la galeria 
+				localStorage.setItem('galeria', arrayTexto);
+			}
+			//----------------------------------------------------------------------------//
+			//----------------------------------------------------------------------------//
+			function abrirLightBox() {
+				//alert ('abrirLightBox');
+				//desactivar listener click de la imagen de la galeria
+				//obtener el  nombre de la imagen
+				//nombreImagen=this.src;
+				nombreImagen=this.getAttribute('src');
+				document.getElementById('fotoLightBox').setAttribute('src', nombreImagen);
+				//abrir lightbox progresivamente - fade out
+				$('#lightBox').fadeIn(1000, 'linear');
+				//muestra caja principal del lightBox	
+				document.getElementById('lightBox').style.display='flex';
+				//averiguar posición en el array de la foto  var pos
+				var slash = nombreImagen.lastIndexOf('/');
+				nombreImagen = nombreImagen.substring(slash+1);
+				imagenActual = arrayGaleria.indexOf(nombreImagen);	
+							
+			}
+
+			function imagenAnterior(event) {
+				//alert('imagenAnterior');
+				//Impedir que se propague el evento - a la caja lightBox
+				 event.stopPropagation();
+				 if (imagenActual>0) {
+				 	imagenActual--;
+				 } else {
+				 	imagenActual=arrayGaleria.length-1;
+				 }
+				 MostrarImagen();
+			}
+
+			function imagenSiguiente(event) {
+				//alert('imagenSiguiente');
+				//Impedir que se propague el evento - a la caja lightBox
+				 event.stopPropagation();
+				 if (imagenActual<arrayGaleria.length-1) {
+				 	imagenActual++;
+				 } else {
+				 	imagenActual=0;
+				 }
+				 MostrarImagen();
+			}
+			
+		function MostrarImagen () {
+			nombreImagen= 'img/' +arrayGaleria[imagenActual];
+			document.getElementById('fotoLightBox').setAttribute('src', nombreImagen);
+		}
+
+		function cerrarLightBox() {
+				//alert ('cerrarLightBox')
+				$('#lightBox').fadeOut(1000, 'linear');
+		}
+	</script>
+</head>
+<body id="body">
+	<div id='contenedor'>
+		<h2>Galería de fotos</h2>
+		<div id='galeria'></div>
+		<hr>
+		<hr>
+		<h2>Doble click para añadir a la galeria</h2>
+		<div id='fotos'></div>
+		<div id='lightBox'>
+			<img src="img/flecha.png" alt="anterior" class="flecha" id="anterior" value="0" title="anterior">
+			<img id="fotoLightBox" src="">
+			<img src="img/flecha.png" alt="siguinte" class="flechaRight" id="siguiente" value="1" title="siguiente">
+		<div>	
+	</div>
+</body>
+</html>
